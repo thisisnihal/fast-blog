@@ -1,0 +1,39 @@
+name: Deploy FastAPI
+
+on:
+  push:
+    branches:
+      - main  # Trigger deployment only when pushing to main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Droplet
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_KEY }}
+          script: |
+            # Make sure repo exists
+            if [ ! -d ~/fastapi_blog ]; then
+              git clone https://github.com/thisisnihal/fast-blog.git ~/fastapi_blog
+            fi
+            cd ~/fastapi_blog
+
+            # Pull latest changes
+            git pull origin main
+
+            # Build & restart container
+            docker build -t fastapi_blog:latest .
+            docker stop fastapi_blog || true
+            docker rm fastapi_blog || true
+            docker run -d -p 8000:8000 \
+            -v ~/fastapi_blog/posts:/app/posts \
+            --name fastapi_blog \
+            fastapi_blog:latest
