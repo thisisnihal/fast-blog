@@ -1,20 +1,16 @@
-name: Deploy FastAPI
+name: Deploy to DigitalOcean
 
 on:
   push:
-    branches:
-      - main  # Trigger deployment only when pushing to main
+    branches: [ "main" ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Deploy to Droplet
-        uses: appleboy/ssh-action@v0.1.7
+        uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
@@ -29,11 +25,6 @@ jobs:
             # Pull latest changes
             git pull origin main
 
-            # Build & restart container
-            docker build -t fastapi_blog:latest .
-            docker stop fastapi_blog || true
-            docker rm fastapi_blog || true
-            docker run -d -p 8000:8000 \
-            -v ~/fastapi_blog/posts:/app/posts \
-            --name fastapi_blog \
-            fastapi_blog:latest
+            # Rebuild & restart containers
+            docker compose down
+            docker compose up -d --build
