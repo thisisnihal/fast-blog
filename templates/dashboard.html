@@ -1,3 +1,4 @@
+<!-- enhanced_dashboard.html -->
 {% extends "base.html" %}
 
 {% block content %}
@@ -8,8 +9,49 @@
         <h3>Welcome, {{ user.username }}!</h3>
         <p>Total Readers: {{ user.total_reader }} | Upvotes: {{ user.total_upvotes }} | Downvotes: {{ user.total_downvotes }}</p>
     </div>
-    <a href="/create" style="background: #007acc; color: white; padding: 0.8rem 1.5rem; text-decoration: none; border-radius: 0.3rem;">New Post</a>
+    <div>
+        <a href="/create" style="background: #007acc; color: white; padding: 0.8rem 1.5rem; text-decoration: none; border-radius: 0.3rem; margin-right: 0.5rem;">New Post</a>
+        <a href="/manage-tags" style="background: #28a745; color: white; padding: 0.8rem 1.5rem; text-decoration: none; border-radius: 0.3rem;">Manage Tags</a>
+    </div>
 </div>
+
+<!-- Tag Preferences Section -->
+{% if user_tag_preferences %}
+<div style="margin-bottom: 2rem; padding: 1rem; background: #2c2c2c; border-radius: 0.5rem;">
+    <h4>Your Tag Preferences</h4>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+        {% for pref in user_tag_preferences[:10] %}
+        <span style="
+            background: {% if pref.user_chosen %}#007acc{% else %}#6c757d{% endif %}; 
+            color: white; 
+            padding: 0.3rem 0.8rem; 
+            border-radius: 1rem; 
+            font-size: 0.85em;
+            position: relative;
+        ">
+            {{ pref.tag }} 
+            <small style="opacity: 0.8;">({{ "%.1f"|format(pref.weight) }})</small>
+            {% if not pref.user_chosen %}
+            <span style="
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: #ffc107;
+                color: #000;
+                border-radius: 50%;
+                width: 16px;
+                height: 16px;
+                font-size: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            " title="Algorithm-based preference">A</span>
+            {% endif %}
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 {% if posts %}
     {% for post in posts %}
@@ -17,28 +59,55 @@
         <div style="display: flex; justify-content: space-between; align-items: start;">
             <div style="flex: 1;">
                 <h3><a href="/post/{{ post.slug }}">{{ post.title }}</a></h3>
-                <div class="post-meta">
+                <div class="post-meta" style="margin: 0.5rem 0; color: #666; font-size: 0.9em;">
                     <span>{{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
                     <span>•</span>
                     <span>{{ post.views }} views</span>
                     <span>•</span>
-                    <span>{{ post.upvotes }} upvotes</span>
+                    <span style="color: #28a745;">{{ post.upvotes }} ↑</span>
+                    <span style="color: #dc3545;">{{ post.downvotes }} ↓</span>
                     {% if post.private %}
                     <span>•</span>
-                    <span style="color: #d32f2f;">Private</span>
+                    <span style="color: #d32f2f; font-weight: bold;">🔒 Private</span>
                     {% endif %}
                 </div>
                 {% if post.tags %}
-                <div class="tags">
+                <div class="tags" style="margin-top: 0.5rem;">
                     {% for tag in post.tags %}
-                        <span class="tag">{{ tag }}</span>
+                        <span style="
+                            background: #2c2c2c;; 
+                            color: #495057; 
+                            padding: 0.2rem 0.5rem; 
+                            border-radius: 0.25rem; 
+                            font-size: 0.8em;
+                            margin-right: 0.3rem;
+                            display: inline-block;
+                            margin-bottom: 0.2rem;
+                        ">{{ tag }}</span>
                     {% endfor %}
                 </div>
                 {% endif %}
             </div>
-            <div class="dashboard-actions">
-                <a href="/edit/{{ post.post_id }}" style="background: #28a745; color: white; padding: 0.3rem 0.8rem; text-decoration: none; border-radius: 0.3rem; font-size: 0.85em;">Edit</a>
-                <button onclick="confirmDelete('{{ post.post_id }}')" style="background: #dc3545; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 0.3rem; font-size: 0.85em; cursor: pointer;">Delete</button>
+            <div class="dashboard-actions" style="display: flex; gap: 0.5rem;">
+                <a href="/edit/{{ post.post_id }}" style="
+                    background: #28a745; 
+                    color: white; 
+                    padding: 0.3rem 0.8rem; 
+                    text-decoration: none; 
+                    border-radius: 0.3rem; 
+                    font-size: 0.85em;
+                    transition: background-color 0.2s;
+                " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">Edit</a>
+                <button onclick="confirmDelete('{{ post.post_id }}')" style="
+                    background: #dc3545; 
+                    color: white; 
+                    border: none; 
+                    padding: 0.3rem 0.8rem; 
+                    border-radius: 0.3rem; 
+                    font-size: 0.85em; 
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                " onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">Delete</button>
             </div>
         </div>
     </article>
@@ -46,25 +115,64 @@
     
     <!-- Pagination -->
     {% if total_pages > 1 %}
-    <div class="pagination">
+    <div class="pagination" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;">
         {% if current_page > 1 %}
-            <a href="/dashboard?page={{ current_page - 1 }}">&laquo; Previous</a>
+            <a href="/dashboard?page={{ current_page - 1 }}" style="
+                padding: 0.5rem 1rem; 
+                background: #f8f9fa; 
+                color: #007acc; 
+                text-decoration: none; 
+                border-radius: 0.3rem;
+                border: 1px solid #dee2e6;
+            ">&laquo; Previous</a>
         {% endif %}
         
         {% for page_num in range(1, total_pages + 1) %}
             {% if page_num == current_page %}
-                <span class="current">{{ page_num }}</span>
+                <span style="
+                    padding: 0.5rem 1rem; 
+                    background: #007acc; 
+                    color: white; 
+                    border-radius: 0.3rem;
+                    border: 1px solid #007acc;
+                ">{{ page_num }}</span>
             {% else %}
-                <a href="/dashboard?page={{ page_num }}">{{ page_num }}</a>
+                <a href="/dashboard?page={{ page_num }}" style="
+                    padding: 0.5rem 1rem; 
+                    background: #f8f9fa; 
+                    color: #007acc; 
+                    text-decoration: none; 
+                    border-radius: 0.3rem;
+                    border: 1px solid #dee2e6;
+                ">{{ page_num }}</a>
             {% endif %}
         {% endfor %}
         
         {% if current_page < total_pages %}
-            <a href="/dashboard?page={{ current_page + 1 }}">Next &raquo;</a>
+            <a href="/dashboard?page={{ current_page + 1 }}" style="
+                padding: 0.5rem 1rem; 
+                background: #f8f9fa; 
+                color: #007acc; 
+                text-decoration: none; 
+                border-radius: 0.3rem;
+                border: 1px solid #dee2e6;
+            ">Next &raquo;</a>
         {% endif %}
     </div>
     {% endif %}
 {% else %}
-    <p>You haven't created any posts yet. <a href="/create">Create your first post!</a></p>
+    <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 0.5rem;">
+        <h4>No Posts Yet</h4>
+        <p style="margin: 1rem 0; color: #666;">You haven't created any posts yet. Start sharing your thoughts with the world!</p>
+        <a href="/create" style="
+            background: #007acc; 
+            color: white; 
+            padding: 0.8rem 2rem; 
+            text-decoration: none; 
+            border-radius: 0.3rem;
+            display: inline-block;
+            margin-top: 0.5rem;
+        ">Create Your First Post</a>
+    </div>
 {% endif %}
 {% endblock %}

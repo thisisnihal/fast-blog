@@ -1,0 +1,85 @@
+<!-- enhanced_post.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<article>
+    <header>
+        <h1>{{ post.title }}</h1>
+        
+        <div class="post-meta">
+            <span>By <strong>{{ author.username }}</strong></span>
+            <span>•</span>
+            <span>{{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+            {% if post.updated_at != post.created_at %}
+            <span>•</span>
+            <span>Updated {{ post.updated_at.strftime('%B %d, %Y') }}</span>
+            {% endif %}
+            <span>•</span>
+            <span>{{ post.views }} views</span>
+            {% if post.private %}
+            <span>•</span>
+            <span class="private-badge">🔒 Private</span>
+            {% endif %}
+        </div>
+        
+        {% if post.tags %}
+        <div class="tags">
+            {% for tag in post.tags %}
+                <span class="tag">#{{ tag }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </header>
+
+    <div class="post-content">
+        {{ content|safe }}
+    </div>
+
+    <!-- Voting Section -->
+    {% if logged_in %}
+    <div class="vote-buttons">
+        <span>Did you like this post?</span>
+        
+        <form method="post" action="/vote/{{ post.post_id }}" style="display: inline;">
+            <button type="submit" name="vote_type" value="upvote" 
+                    class="vote-btn upvote {% if current_user_vote == 'upvote' %}active{% endif %}">
+                ↑ Upvote ({{ post.upvotes }})
+            </button>
+        </form>
+        
+        <form method="post" action="/vote/{{ post.post_id }}" style="display: inline;">
+            <button type="submit" name="vote_type" value="downvote"
+                    class="vote-btn downvote {% if current_user_vote == 'downvote' %}active{% endif %}">
+                ↓ Downvote ({{ post.downvotes }})
+            </button>
+        </form>
+        
+        {% if current_user_vote %}
+        <small>You {% if current_user_vote == 'upvote' %}upvoted{% else %}downvoted{% endif %} this post</small>
+        {% endif %}
+    </div>
+    {% else %}
+    <aside>
+        <p><a href="/login">Login</a> to vote and interact with posts</p>
+        <small>{{ post.upvotes }} upvotes • {{ post.downvotes }} downvotes</small>
+    </aside>
+    {% endif %}
+
+    <!-- Author Info -->
+    <details>
+        <summary>About {{ author.username }}</summary>
+        <div class="stats">
+            {{ author.total_reader }} total readers • 
+            {{ author.total_upvotes }} upvotes received • 
+            {{ author.total_downvotes }} downvotes received •
+            Member since {{ author.created_at.strftime('%B %Y') }}
+        </div>
+    </details>
+
+    <!-- Navigation -->
+    <p style="text-align: center; margin-top: 2rem;">
+        <a href="/">← Back to Home</a>
+    </p>
+</article>
+
+{% endblock %}

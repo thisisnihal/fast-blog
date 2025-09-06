@@ -1,0 +1,170 @@
+<!-- manage_tags.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="post-header">
+    <h2>Manage Tag Preferences</h2>
+    <a href="/dashboard">← Back to Dashboard</a>
+</div>
+
+<details>
+    <summary>How Tag Preferences Work</summary>
+    <p>
+        <strong>User-chosen tags</strong> (colored) have higher influence on your feed recommendations. 
+        <strong>Algorithm-based tags</strong> (gray with 'A' badge) are automatically added based on your engagement patterns. 
+        You can add your own preferences below.
+    </p>
+</details>
+
+<!-- Current Preferences -->
+{% if user_tag_preferences %}
+<section>
+    <h3>Current Preferences</h3>
+    <div>
+        {% for pref in user_tag_preferences %}
+        <span class="tag-pref {% if not pref.user_chosen %}algo-based{% endif %}">
+            {{ pref.tag }} <small>({{ "%.1f"|format(pref.weight) }})</small>
+            {% if not pref.user_chosen %}
+            <span class="algo-badge" title="Algorithm-based preference">A</span>
+            {% endif %}
+        </span>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Tag Selection Form -->
+<form method="post">
+    <h3>Select Your Preferred Tags</h3>
+    
+    <fieldset>
+        <legend>Available Tags</legend>
+        <div class="tag-selection" id="tag-selection">
+            {% for tag in available_tags %}
+            <label style="padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; transition: all 0.2s;"
+                   onmouseover="this.style.borderColor='#007acc'" onmouseout="this.style.borderColor='#dee2e6'">
+                <input type="checkbox" name="selected_tag" value="{{ tag }}" 
+                       onchange="updateSelectedTags()" style="margin: 0;"
+                       {% if user_tag_preferences %}
+                           {% for pref in user_tag_preferences %}
+                               {% if pref.tag == tag and pref.user_chosen %}checked{% endif %}
+                           {% endfor %}
+                       {% endif %}>
+                <span>{{ tag }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        
+        <div style="margin-top: 1rem;">
+            <label for="custom-tags" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                Or add custom tags (comma-separated):
+            </label>
+            <input type="text" id="custom-tags" placeholder="e.g., programming, design, lifestyle" 
+                   style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 0.3rem;"
+                   onchange="addCustomTags()">
+        </div>
+    </fieldset>
+
+    <fieldset style="margin-top: 1.5rem;">
+        <legend>Selected Tags Preview</legend>
+        <div id="selected-tags-preview" style="min-height: 40px; padding: 0.5rem;  border: 1px solid #dee2e6; border-radius: 0.3rem;">
+            <em>No tags selected</em>
+        </div>
+    </fieldset>
+
+    <!-- Hidden inputs for form submission -->
+    <input type="hidden" name="selected_tags" id="selected-tags-input">
+    <input type="hidden" name="tag_weights" id="tag-weights-input">
+
+    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+        <a href="/dashboard" style="background: #6c757d; color: white; padding: 0.8rem 1.5rem; text-decoration: none; border-radius: 0.3rem;">Cancel</a>
+        <button type="submit" style="background: #007acc; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 0.3rem; cursor: pointer;">Save Preferences</button>
+    </div>
+</form>
+
+<script>
+// Store current user preferences for comparison
+const currentUserPreferences = {
+    {% for pref in user_tag_preferences if pref.user_chosen %}
+        "{{ pref.tag }}": {{ "%.1f"|format(pref.weight) }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+};
+
+function updateSelectedTags() {
+    const checkboxes = document.querySelectorAll('input[name="selected_tag"]:checked');
+    const selectedTags = Array.from(checkboxes).map(cb => cb.value);
+    
+    // Update preview
+    const preview = document.getElementById('selected-tags-preview');
+    if (selectedTags.length === 0) {
+        preview.innerHTML = '<em>No tags selected</em>';
+    } else {
+        preview.innerHTML = selectedTags.map(tag => 
+            `<span class="tag-pref">${tag}</span>`
+        ).join(' ');
+    }
+    
+    // Update hidden inputs
+    document.getElementById('selected-tags-input').value = selectedTags.join(',');
+    
+    // Set weights (user-chosen tags get weight 5.0, existing user preferences keep their weight)
+    const weights = selectedTags.map(tag => {
+        const existingWeight = currentUserPreferences[tag] || 5.0;
+        return `${tag}:${existingWeight}`;
+    });
+    document.getElementById('tag-weights-input').value = weights.join(',');
+    
+    // Update label styles
+    document.querySelectorAll('.tag-selection label').forEach(label => {
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+            label.classList.add('selected');
+        } else {
+            label.classList.remove('selected');
+        }
+    });
+}
+
+function addCustomTags() {
+    const customTagsInput = document.getElementById('custom-tags');
+    const customTags = customTagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+    
+    if (customTags.length === 0) return;
+    
+    const tagSelection = document.getElementById('tag-selection');
+    
+    customTags.forEach(tag => {
+        // Check if tag already exists
+        const existingCheckbox = document.querySelector(`input[name="selected_tag"][value="${tag}"]`);
+        if (existingCheckbox) {
+            existingCheckbox.checked = true;
+            return;
+        }
+        
+        // Create new tag element
+        const label = document.createElement('label');
+        label.style.cssText = "";//"border: 2px solid #dee2e6; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; transition: all 0.2s;";
+        label.onmouseover = () => label.style.borderColor = '#007acc';
+        label.onmouseout = () => label.style.borderColor = '#dee2e6';
+        label.innerHTML = `
+            <input type="checkbox" name="selected_tag" value="${tag}" onchange="updateSelectedTags()" checked>
+            <span>${tag}</span>
+        `;
+        
+        tagSelection.appendChild(label);
+    });
+    
+    // Clear the input
+    customTagsInput.value = '';
+    
+    // Update the selection
+    updateSelectedTags();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedTags();
+});
+</script>
+
+{% endblock %}

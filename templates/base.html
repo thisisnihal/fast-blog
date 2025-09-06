@@ -86,14 +86,71 @@
         color: #e0e0e0;
     }
 
+    .tag-preferences {
+        /* background: #f8f9fa; */
+        padding: 1rem;
+        border-radius: 0.3rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tag-pref {
+        background: var(--accent);
+        /* color: white; */
+        padding: 0.3rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.85em;
+        margin-right: 0.5rem;
+        display: inline-block;
+        margin-bottom: 0.3rem;
+        position: relative;
+    }
+
+    .tag-pref.algo-based {
+        background: #666;
+    }
+
+    .tag-pref .algo-badge {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        background: #ffc107;
+        color: #000;
+        border-radius: 50%;
+        width: 14px;
+        height: 14px;
+        font-size: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
     .vote-buttons {
         margin: 1rem 0;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
     }
 
     .vote-btn {
-        margin-right: 0.5rem;
         padding: 0.3rem 0.8rem;
         font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .vote-btn.active {
+        background: var(--accent);
+        color: white;
+    }
+
+    .vote-btn.upvote.active {
+        background: #28a745;
+    }
+
+    .vote-btn.downvote.active {
+        background: #dc3545;
     }
 
     .pagination {
@@ -106,14 +163,14 @@
     .pagination a, .pagination span {
         padding: 0.5rem 1rem;
         text-decoration: none;
-        border: 1px solid #ddd;
+        border: 1px solid var(--border);
         border-radius: 0.3rem;
     }
 
     .pagination .current {
-        background: #007acc;
+        background: var(--accent);
         color: white;
-        border-color: #007acc;
+        border-color: var(--accent);
     }
 
     .dashboard-actions {
@@ -122,9 +179,11 @@
         margin-top: 0.5rem;
     }
 
+    .dashboard-actions a,
     .dashboard-actions button {
         padding: 0.3rem 0.8rem;
         font-size: 0.85em;
+        text-decoration: none;
     }
 
     .error {
@@ -148,6 +207,63 @@
         margin: 1rem 0;
         font-style: italic;
         color: #666;
+    }
+
+    .stats {
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    .post-article {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .post-content-section {
+        flex: 1;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: #f8f9fa;
+        border-radius: 0.3rem;
+    }
+
+    .tag-selection label {
+        background: white;
+        border: 2px solid var(--border);
+        padding: 0.5rem 1rem;
+        border-radius: 0.3rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin: 0.3rem;
+        transition: all 0.2s;
+    }
+
+    .tag-selection label:hover {
+        border-color: var(--accent);
+    }
+
+    .tag-selection label.selected {
+        border-color: var(--accent);
+        background: #e7f3ff;
+    }
+
+    .private-badge {
+        color: #d32f2f;
+        font-weight: bold;
+        font-size: 0.8em;
     }
 </style>
 
@@ -202,7 +318,6 @@
                 });
                 
                 if (response.ok) {
-                    // Refresh the page to show updated vote counts
                     location.reload();
                 } else {
                     alert('Please login to vote');
@@ -213,7 +328,7 @@
         }
 
         function confirmDelete(postId) {
-            if (confirm('Are you sure you want to delete this post?')) {
+            if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/delete/${postId}`;
