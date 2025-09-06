@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article>
+    <h1>{{ post.title }}</h1>
+    
+    <div class="post-meta">
+        <span>By {{ author.username }}</span>
+        <span>•</span>
+        <span>{{ post.created_at.strftime('%B %d, %Y') }}</span>
+        {% if post.updated_at != post.created_at %}
+        <span>•</span>
+        <span>Updated {{ post.updated_at.strftime('%B %d, %Y') }}</span>
+        {% endif %}
+        <span>•</span>
+        <span>{{ post.views }} views</span>
+    </div>
+    
+    {% if post.tags %}
+    <div class="tags">
+        {% for tag in post.tags %}
+            <span class="tag">{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="vote-buttons">
+        <button class="vote-btn" onclick="votePost('{{ post.post_id }}', 'upvote')" style="background: #28a745; color: white; border: none; border-radius: 0.3rem; cursor: pointer;">
+            👍 {{ post.upvotes }}
+        </button>
+        <button class="vote-btn" onclick="votePost('{{ post.post_id }}', 'downvote')" style="background: #dc3545; color: white; border: none; border-radius: 0.3rem; cursor: pointer;">
+            👎 {{ post.downvotes }}
+        </button>
+    </div>
+    
+    <div class="post-content" style="margin-top: 2rem;">
+        {{ content | safe }}
+    </div>
+</article>
+
+<div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #eee;">
+    <p><a href="/">&larr; Back to Home</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Latest Posts</h2>
+
+{% if user_tags %}
+<div class="user-tags">
+    <strong>Your interests:</strong>
+    {% for tag in user_tags %}
+        <span class="tag">{{ tag }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if posts %}
+    {% for post in posts %}
+    <article style="margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+        <h3><a href="/post/{{ post.slug }}">{{ post.title }}</a></h3>
+        <div class="post-meta">
+            <span>{{ post.created_at.strftime('%B %d, %Y') }}</span>
+            <span>•</span>
+            <span>{{ post.views }} views</span>
+            <span>•</span>
+            <span>{{ post.upvotes }} upvotes</span>
+            {% if post.downvotes > 0 %}
+            <span>•</span>
+            <span>{{ post.downvotes }} downvotes</span>
+            {% endif %}
+        </div>
+        {% if post.tags %}
+        <div class="tags">
+            {% for tag in post.tags %}
+                <span class="tag">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </article>
+    {% endfor %}
+{% else %}
+    <p>No posts available yet. <a href="/create">Create the first post!</a></p>
+{% endif %}
+{% endblock %}

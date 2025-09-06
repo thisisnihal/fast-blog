@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>{{ title }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <link id="highlight-stylesheet" rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
+</head>
+<style>
+    pre {
+        padding: 0.5rem 0.5rem;
+        overflow: auto;
+    }
+
+    section {
+        padding-left: 0.1rem;
+        padding-right: 0.1rem;
+    }
+
+    body {
+        grid-template-columns: 1fr min(45rem, 95%) 1fr;
+        padding-left: 0rem;
+        padding-right: 0rem;
+    }
+
+    h1 strong,
+    h2 strong,
+    h3 strong {
+        font-size: 85%;
+    }
+
+    .code-container {
+        position: relative;
+        width: 100%;
+    }
+
+    .copy-btn {
+        position: absolute;
+        top: -2px;
+        right: -4px;
+        transform: scale(0.8);
+        z-index: 10;
+        cursor: pointer;
+        background: rgb(43, 43, 43);
+        color: silver;
+        border-color: silver;
+    }
+
+    .copy-btn:enabled:hover {
+        background: rgb(92, 92, 92);
+    }
+
+    .copy-btn:enabled:active {
+        background-color: rgb(56, 56, 56);
+    }
+
+    code {
+        padding-left: 0.1rem;
+        padding-right: 0.1rem;
+        padding-top: 10px;
+    }
+
+    .post-meta {
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 1rem;
+    }
+
+    .tags {
+        margin: 0.5rem 0;
+    }
+
+    .tag {
+        background: #666;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.3rem;
+        font-size: 0.8em;
+        margin-right: 0.3rem;
+        display: inline-block;
+        color: #e0e0e0;
+    }
+
+    .vote-buttons {
+        margin: 1rem 0;
+    }
+
+    .vote-btn {
+        margin-right: 0.5rem;
+        padding: 0.3rem 0.8rem;
+        font-size: 0.9em;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 2rem 0;
+    }
+
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        border: 1px solid #ddd;
+        border-radius: 0.3rem;
+    }
+
+    .pagination .current {
+        background: #007acc;
+        color: white;
+        border-color: #007acc;
+    }
+
+    .dashboard-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .dashboard-actions button {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.85em;
+    }
+
+    .error {
+        color: #d32f2f;
+        background: #ffebee;
+        padding: 0.8rem;
+        border-radius: 0.3rem;
+        margin: 1rem 0;
+    }
+
+    textarea {
+        min-height: 300px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .user-tags {
+        margin: 1rem 0;
+        font-style: italic;
+        color: #666;
+    }
+</style>
+
+<body>
+    <header>
+        <h1><a href="/" style="text-decoration: none; color: inherit;">FAST BLOG</a></h1>
+        <nav>
+            <a href="/" class="{% if request.url.path == '/' %}current{% endif %}">Home</a>
+            {% if logged_in %}
+            <a href="/dashboard" class="{% if request.url.path == '/dashboard' %}current{% endif %}">Dashboard</a>
+            <a href="/create" class="{% if request.url.path == '/create' %}current{% endif %}">Create</a>
+            <a href="/logout">Logout</a>
+            {% else %}
+            <a href="/login" class="{% if request.url.path == '/login' %}current{% endif %}">Login</a>
+            <a href="/signup" class="{% if request.url.path == '/signup' %}current{% endif %}">Sign Up</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+
+    <script>
+        function copyCode(button) {
+            const codeBlock = button.nextElementSibling;
+            const code = codeBlock.innerText;
+
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = code;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            button.innerText = 'copied!';
+            setTimeout(() => {
+                button.innerText = 'copy';
+            }, 2000);
+        }
+
+        async function votePost(postId, voteType) {
+            const formData = new FormData();
+            formData.append('vote_type', voteType);
+            
+            try {
+                const response = await fetch(`/vote/${postId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    // Refresh the page to show updated vote counts
+                    location.reload();
+                } else {
+                    alert('Please login to vote');
+                }
+            } catch (error) {
+                console.error('Error voting:', error);
+            }
+        }
+
+        function confirmDelete(postId) {
+            if (confirm('Are you sure you want to delete this post?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/delete/${postId}`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+
+</html>
