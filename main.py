@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 import math
 from collections import defaultdict
-
+from dotenv import load_dotenv
 # MongoDB
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import DESCENDING, ASCENDING
@@ -29,12 +29,13 @@ import pymongo.errors
 # Configuration
 #################
 # Secret key and JWT config
+load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 # MongoDB config
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+MONGODB_URL = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DATABASE_NAME = "fastblog"
 
 # Local folder for markdown posts

@@ -7,7 +7,32 @@ services:
     restart: always
     env_file:
       - .env
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"   # internal only, not published to host
     volumes:
-      - ./posts:/app/posts 
+      - ./posts:/app/posts
+      # - ./static:/app/static
+      # - ./templates:/app/templates
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - fastapi-blog
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: >
+      sh -c "trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; done"

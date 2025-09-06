@@ -21,10 +21,6 @@ jobs:
               git clone https://github.com/thisisnihal/fast-blog.git ~/fastapi_blog
             fi
             cd ~/fastapi_blog
-
-            # Pull latest changes
             git pull origin main
-
-            # Rebuild & restart containers
             docker compose down
             docker compose up -d --build
